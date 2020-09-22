@@ -3,10 +3,12 @@ package com.urquieta.inhouse;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -80,76 +82,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public class NetEntity {
-        public String entity;
-        public ArrayList<NetData> data;
-        public NetData year_min_d;
-        public NetData year_max_d;
-
-        public NetEntity() {
-            entity = null;
-            data   = new ArrayList<>();
-        }
-
-        public class NetData {
-            public int    year;
-            public float  percentage;
-            public long   homes_with_net;
-            public long   homes_total;
-        }
-
-        public String GetYearRange() {
-            return String.format("%d - %d", year_min_d.year, year_max_d.year);
-        }
-
-        public void CalculateDataRanges() {
-            int year_min = Integer.MAX_VALUE;
-            int year_max = Integer.MIN_VALUE;
-
-            for (NetData d : data) {
-                if (d.year < year_min) {
-                    year_min = d.year;
-                    year_min_d = d;
-                }
-                if (d.year > year_max) {
-                    year_max = d.year;
-                    year_max_d = d;
-                }
-            }
-        }
-
-        public String GetHomesNetRange() {
-            return String.format("%d - %d", year_min_d.homes_with_net, year_max_d.homes_with_net);
-        }
-
-        public String GetPercentageRange() {
-            return String.format("%.2f - %.2f", year_min_d.percentage, year_max_d.percentage);
-        }
-
-        public String GetTotalHomesRange() {
-            return String.format("%d - %d", year_min_d.homes_total, year_max_d.homes_total);
-        }
-
-        public void AddArrayData(ArrayList<String> rs) {
-            if (entity == null) {
-                entity = rs.get(0);
-                NetData d = new NetData();
-                d.year           = Integer.parseInt(rs.get(1));
-                d.percentage     = Float.parseFloat(rs.get(2));
-                d.homes_with_net = Long.parseLong(rs.get(3));
-                d.homes_total    = Long.parseLong(rs.get(4));
-                data.add(d);
-            } else if (entity.compareTo(rs.get(0)) == 0){
-                NetData d = new NetData();
-                d.year           = Integer.parseInt(rs.get(1));
-                d.percentage     = Float.parseFloat(rs.get(2));
-                d.homes_with_net = Long.parseLong(rs.get(3));
-                d.homes_total    = Long.parseLong(rs.get(4));
-                data.add(d);
-            }
-        }
-    }
-
     public class NetEntityAdapter extends ArrayAdapter<NetEntity> {
 
         public NetEntityAdapter(Context context, ArrayList<NetEntity> ns) {
@@ -167,23 +99,6 @@ public class MainActivity extends AppCompatActivity {
             ((TextView) v.findViewById(R.id.element_years)).setText("\tRango de años: " + n.GetYearRange());
             ((TextView) v.findViewById(R.id.element_total_homes)).setText("\tTotal de casas: " + n.GetTotalHomesRange());
             ((TextView) v.findViewById(R.id.element_homes_percentage)).setText("\tPorcentaje de casas con internet: " + n.GetPercentageRange());
-            return v;
-        }
-    }
-
-    public class CSVRowAdapter extends ArrayAdapter<ArrayList<String>> {
-
-        public CSVRowAdapter(Context context, ArrayList<ArrayList<String>> rs) {
-            super(context, 0, rs);
-        }
-
-        @Override
-        public View getView(int p, View v, ViewGroup vg) {
-            ArrayList<String> rs = getItem(p);
-            if (v == null) {
-                v = LayoutInflater.from(getContext()).inflate(R.layout.activity_ls_view, vg, false);
-            }
-            ((TextView) v.findViewById(R.id.element_view)).setText(rs.get(0));
             return v;
         }
     }
@@ -217,8 +132,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         ListView list = findViewById(R.id.internet_house_ls);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent i = new Intent(MainActivity.this, GraphEntity.class);
+                i.putExtra("entity", (NetEntity)parent.getItemAtPosition(position));
+                startActivity(i);
+            }
+        });
         NetEntityAdapter ls_adapter = new NetEntityAdapter(this, entities);
-        // ArrayAdapter<ArrayList<String>> ls_adapter = new ArrayAdapter<>(this, R.layout.activity_ls_view, R.id.element_view, csv_data.rows);
 
         list.setAdapter(ls_adapter);
     }
